@@ -9,7 +9,11 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/register', methods=['POST'])
 def register():
-    """Register"""
+    """
+    POST /register
+        register a new user
+    Returns:
+        - JSON payload"""
     data = request.json
     hashed_password = generate_password_hash(data['password'], methods='sha256')
     new_user = User(email=data['email'], password=hashed_password)
@@ -19,7 +23,11 @@ def register():
 
 @auth.route('/login', methods=['POST'])
 def login():
-    """Login"""
+    """
+    POST /Login
+        login a user
+    Returns:
+        - JSON payload"""
     data = request.json
     user = User.query.filter_by(email=data['email']).first()
     if user and check_password_hash(user.password, data['password']):
