@@ -15,7 +15,9 @@ def register():
     Returns:
         - JSON payload"""
     data = request.json
-    hashed_password = generate_password_hash(data['password'], methods='sha256')
+    if not data or 'email' not in data or 'password' not in data:
+        return jsonify({'message': 'Missing email or password'}), 400
+    hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
     new_user = User(email=data['email'], password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
@@ -29,6 +31,8 @@ def login():
     Returns:
         - JSON payload"""
     data = request.json
+    if not data or 'email' not in data or 'password' not in data:
+        return jsonify({'message': 'Missing email or password'}), 400
     user = User.query.filter_by(email=data['email']).first()
     if user and check_password_hash(user.password, data['password']):
         return jsonify({'message': 'Login successful!'})

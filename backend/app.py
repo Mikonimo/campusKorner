@@ -3,21 +3,28 @@
 initializes the app and sets configurations"""
 from flask import Flask
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from routes import init_routes
-
-app = Flask(__name__)
-CORS(app)
+from extensions import db, migrate
+import click
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] =\
-    'mysql+pymysql://mikonimo:8a3k5r13@localhost/campuskorner'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+def create_app():
+    """Initializes Flask App"""
+    app = Flask(__name__)
+    CORS(app)
+    app.config['SQLALCHEMY_DATABASE_URI'] =\
+        'mysql+pymysql://mikonimo:8a3k5r13@localhost/campuskorner'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    migrate.init_app(app, db)
 
-db = SQLAlchemy(app)
+    @app.cli.command("create-db")
+    def create_db():
+        """Create the database schema"""
+        db.create_all()
+        click.echo("Database schema created!")
 
-init_routes(app)
+    with app.app_context():
+        from routes import init_routes
+        init_routes(app)
 
-
-if __name__ == '__main__':
-    app.run()
+    return app
