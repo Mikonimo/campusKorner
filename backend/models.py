@@ -1,14 +1,50 @@
 #!/usr/bin/env python3
 """Database Models e.g., User, Product"""
 from extensions import db
+from datetime import datetime
+# import Datetime
 
 
 class User(db.Model):
     """User database model"""
+    __tablename__ = 'users'
+
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
+    full_name = db.Column(db.String(120), nullable=False)
+    university = db.Column(db.String(120), nullable=False)
+    is_seller = db.Column(db.Boolean, default=False)
+    is_verified = db.Column(db.Boolean, default=False)
+    phone_number = db.Column(db.String(20))
+    profile_image = db.Column(db.String(255))
+    # created_at = db.Column(Datetime, default=datetime.utcnow)
+
+    # Relationships
+    products = db.relationship('Product', backref='')
 
     def __repr__(self):
         """Representation fo the Class"""
         return f'<User {self.email}>'
+
+
+class Product(db.Model):
+    """Product database model"""
+    __tablename__ = 'products'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    condition = db.Column(db.String(50))  # New, Used
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    university = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(20), default='available')  # available, sold
+    # created_at = db.Column(db.Datetime, default=datetime.utcnow)
+    # updated_at = db.Column(Datetime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+
+    def __repr__(self):
+        return f'<Product {self.name}>'
