@@ -48,3 +48,17 @@ class Product(db.Model):
 
     def __repr__(self):
         return f'<Product {self.name}>'
+
+
+class ProductImage(db.Model):
+    """Product Images database model"""
+    __tablename__ = 'product_images'
+
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    image_url = db.Column(db.String(255), nullable=False)
+    is_primary = db.Column(db.Boolean, default=False)
+    # created_at = db.Column(db.Datetime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<ProducImage {self.image_url}>'
