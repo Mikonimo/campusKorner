@@ -62,3 +62,19 @@ class ProductImage(db.Model):
 
     def __repr__(self):
         return f'<ProducImage {self.image_url}>'
+
+
+class Order(db.Model):
+    """Order database model"""
+    __tablename__ = 'orders'
+
+    id = db.Column(db.Integer, primary_key=True)
+    buyer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending') # pending, completed, cancelled
+    # created_at = db.Column(db.Datetime, default=datetime.utcnow)
+    # updated_at = db.Column(db.Datetime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Order {self.id}>'
