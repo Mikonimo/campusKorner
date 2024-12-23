@@ -21,7 +21,9 @@ class User(db.Model):
     # created_at = db.Column(Datetime, default=datetime.utcnow)
 
     # Relationships
-    products = db.relationship('Product', backref='')
+    products = db.relationship('Product', backref='seller', lazy=True)
+    orders_as_buyer = db.relationship('Order', backref='buyer', lazy=True, foreign_keys='Order.buyer_id')
+    orders_as_seller = db.relationship('Order', backref='seller', lazy=True, foreign_keys='Order.seller_id')
 
     def __repr__(self):
         """Representation fo the Class"""
@@ -45,6 +47,8 @@ class Product(db.Model):
     # updated_at = db.Column(Datetime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
+    images = db.relationship('ProductImage', backref='product', lazy=True, cascade='all, delete-orphan')
+    orders = db.relationship('Order', backref='product', lazy=True)
 
     def __repr__(self):
         return f'<Product {self.name}>'
