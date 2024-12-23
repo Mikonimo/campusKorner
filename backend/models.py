@@ -78,3 +78,19 @@ class Order(db.Model):
 
     def __repr__(self):
         return f'<Order {self.id}>'
+
+
+class Review(db.Model):
+    """Review database model"""
+    __tablename__ = 'reviews'
+
+    id = db.Column(db.Integer, primary_key=True)
+    reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    reviewed_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False) # 1-5 stars
+    comment = db.Column(db.Text)
+    # created_at = db.Column(db.Datetime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Review {self.id}>'
