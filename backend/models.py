@@ -2,7 +2,7 @@
 """Database Models e.g., User, Product"""
 from extensions import db
 from datetime import datetime
-# import Datetime
+from sqlalchemy import DateTime
 
 
 class User(db.Model):
@@ -18,7 +18,7 @@ class User(db.Model):
     is_verified = db.Column(db.Boolean, default=False)
     phone_number = db.Column(db.String(20))
     profile_image = db.Column(db.String(255))
-    # created_at = db.Column(Datetime, default=datetime.utcnow)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     products = db.relationship('Product', backref='seller', lazy=True)
@@ -43,8 +43,8 @@ class Product(db.Model):
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     university = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), default='available')  # available, sold
-    # created_at = db.Column(db.Datetime, default=datetime.utcnow)
-    # updated_at = db.Column(Datetime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
+    updated_at = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
     images = db.relationship('ProductImage', backref='product', lazy=True, cascade='all, delete-orphan')
@@ -62,7 +62,7 @@ class ProductImage(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     image_url = db.Column(db.String(255), nullable=False)
     is_primary = db.Column(db.Boolean, default=False)
-    # created_at = db.Column(db.Datetime, default=datetime.utcnow)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return f'<ProducImage {self.image_url}>'
@@ -77,8 +77,8 @@ class Order(db.Model):
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     status = db.Column(db.String(20), default='pending') # pending, completed, cancelled
-    # created_at = db.Column(db.Datetime, default=datetime.utcnow)
-    # updated_at = db.Column(db.Datetime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
+    updated_at = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
         return f'<Order {self.id}>'
@@ -94,7 +94,7 @@ class Review(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
     rating = db.Column(db.Integer, nullable=False) # 1-5 stars
     comment = db.Column(db.Text)
-    # created_at = db.Column(db.Datetime, default=datetime.utcnow)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return f'<Review {self.id}>'
