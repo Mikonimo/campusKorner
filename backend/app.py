@@ -6,6 +6,9 @@ from flask_cors import CORS
 from extensions import db, migrate
 from models import User, Product, ProductImage, Order, Review, Category
 import click
+from routes.auth_routes import auth
+from routes.product_routes import product_bp
+from routes.order_routes import order_bp
 
 
 def create_app():
@@ -17,6 +20,10 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
     migrate.init_app(app, db)
+
+    app.register_blueprint(auth, url_prefix='/api/auth')
+    app.register_blueprint(product_bp, url_prefix='/api/products')
+    app.register_blueprint(order_bp, url_prefix='/api')
 
     @app.cli.command("create-db")
     def create_db():
