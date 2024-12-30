@@ -2,27 +2,30 @@
 """Product Routes"""
 from flask import Blueprint, request, jsonify
 from models import Product, ProductImage, db
+from routes.auth_routes import token_required
 
 product_bp = Blueprint('product_bp', __name__)
 
-
 @product_bp.route('/products', methods=['POST'])
-def create_product():
-    """
-    POST /products
-        adds products items
-    Return
-        - JSON payload
-    """
+@token_required
+def create_product(current_user):
+    """Create a new product"""
+    if not current_user.is_seller:
+        return jsonify({'error': 'Seller account required'}), 403
+
     data = request.get_json()
+    required_fields = ['name', 'description', 'price', 'category']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Missing required fields'}), 400
+
     product = Product(
         name=data['name'],
         description=data['description'],
         price=data['price'],
         category=data['category'],
         condition=data.get('condition'),
-        seller_id=data['seller_id'],
-        university=data['university']
+        seller_id=current_user.id,
+        university=current_user.university
     )
     db.session.add(product)
     db.session.commit()
@@ -30,31 +33,43 @@ def create_product():
 
 @product_bp.route('/products', methods=['GET'])
 def get_products():
-    """
-    GET /products
-        retrieves product items
-    Return:
-        - JSON payload
-    """
+    """Get products with pagination and search"""
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    search = request.args.get('search', '')
     university = request.args.get('university')
     category = request.args.get('category')
+
     query = Product.query
 
+    if search:
+        query = query.filter(Product.name.ilike(f'%{search}%'))
     if university:
         query = query.filter_by(university=university)
     if category:
         query = query.filter_by(category=category)
 
-    products = query.all()
-    return jsonify([{
-        'id': p.id,
-        'name': p.name,
-        'price': p.price,
-        'description': p.description,
-        'category': p.category,
-        'university': p.university,
-        'status': p.status
-    } for p in products]), 200
+    pagination = query.order_by(Product.created_at.desc()).paginate(
+        page=page, per_page=per_page)
+
+    return jsonify({
+        'products': [{
+            'id': p.id,
+            'name': p.name,
+            'price': p.price,
+            'description': p.description,
+            'category': p.category,
+            'university': p.university,
+            'status': p.status,
+            'seller': {
+                'id': p.seller_id,
+                'name': p.seller.full_name if p.seller else None
+            }
+        } for p in pagination.items],
+        'total_pages': pagination.pages,
+        'current_page': page,
+        'total_products': pagination.total
+    }), 200
 
 @product_bp.route('/products/<int:id>', methods=['GET'])
 def get_product(id):
@@ -78,36 +93,24 @@ def get_product(id):
         'status': product.status
     }), 200
 
-@product_bp.route('/products/<int:id>', methods=['PUT'])
-def update_product(id):
-    """
-    PUT /products/<int:id>
-        updates a specific product(id)
-    Args:
-        id (int): product id
-    Returns:
-        - JSON payload
-    """
+@product_bp.route('/products/<int:id>', methods=['PUT', 'DELETE'])
+@token_required
+def modify_product(current_user, id):
+    """Modify or delete a product"""
     product = Product.query.get_or_404(id)
-    data = request.get_json()
 
+    if product.seller_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    if request.method == 'DELETE':
+        db.session.delete(product)
+        db.session.commit()
+        return jsonify({'message': 'Product deleted'}), 200
+
+    data = request.get_json()
     for key, value in data.items():
-        setattr(product, key, value)
+        if hasattr(product, key):
+            setattr(product, key, value)
 
     db.session.commit()
     return jsonify({'message': 'Product updated'}), 200
-
-@product_bp.route('/products/<int:id>', methods=['DELETE'])
-def delete_product(id):
-    """
-    DELETE /products/<int:id>
-        deletes a specific produc(id)
-    Args:
-        id (int): product id
-    Returns:
-        - JSON payload
-    """
-    product = Product.query.get_or_404(id)
-    db.session.delete(product)
-    db.session.commit()
-    return jsonify({'message': 'Product deleted'}), 200

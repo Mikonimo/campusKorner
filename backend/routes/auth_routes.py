@@ -85,7 +85,7 @@ def login():
 
     token = jwt.encode({
         'user_id': user.id,
-        'exp': datetime.utcnown() + timedelta(days=1)
+        'exp': datetime.utcnow() + timedelta(days=1)  # Fix typo from utcnown
     }, 'your-secret-key', algorithm="HS256")
 
     return jsonify({

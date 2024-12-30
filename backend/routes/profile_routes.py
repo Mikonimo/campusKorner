@@ -19,17 +19,21 @@ def get_profile(current_user):
         'is_verified': current_user.is_verified
     })
 
-@profile_bp.route('/profile/update', methods='PUT')
+@profile_bp.route('/profile/update', methods=['PUT'])
 @token_required
 def update_profile(current_user):
     data = request.get_json()
+    allowed_fields = {'full_name', 'university', 'bio', 'phone_number'}
+
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
     for key, value in data.items():
-        if hasattr(current_user, key):
+        if key in allowed_fields and hasattr(current_user, key):
             setattr(current_user, key, value)
+
     db.session.commit()
     return jsonify({'message': 'Profile updated'}), 200
-
-
 
 @profile_bp.route('/profile/seller', methods=['POST'])
 @token_required
