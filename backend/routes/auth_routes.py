@@ -98,16 +98,3 @@ def login():
             'university': user.university
         }
     })
-
-@auth_bp.route('/profile', methods=['GET'])
-@token_required
-def get_profile(current_user):
-    """Get user profile"""
-    return jsonify({
-        'id': current_user.id,
-        'email': current_user.email,
-        'full_name': current_user.full_name,
-        'university': current_user.university,
-        'is_seller': current_user.is_seller,
-        'is_verified': current_user.is_verified
-    })
