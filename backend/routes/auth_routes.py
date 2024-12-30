@@ -6,6 +6,7 @@ from models import User, db
 import jwt
 from datetime import datetime, timedelta
 from functools import wraps
+import logging
 
 auth_bp = Blueprint('auth_bp', __name__)
 
@@ -35,7 +36,7 @@ def register():
     Returns:
         - JSON payload"""
     data = request.json
-    required_fields = ['email', 'password', 'fullname', 'university']
+    required_fields = ['email', 'password', 'full_name', 'university']
 
     if not all(field in data for field in required_fields):
         return jsonify({'message': 'Missing required fields'}), 400
@@ -55,8 +56,8 @@ def register():
     db.session.commit()
 
     token = jwt.encode({
-        'user_id': new_user.id,
-        'exp': datetime.utcnow() + timedelta(days=1)
+        'user_id': str(new_user.id),
+        'exp': str(datetime.utcnow() + timedelta(days=1))
     },'your-secret-key', algorithm="HS256")
 
     return jsonify({
@@ -77,28 +78,44 @@ def login():
         login a user
     Returns:
         - JSON payload"""
-    data = request.json
-    if not data or 'email' not in data or 'password' not in data:
-        return jsonify({'message': 'Missing email or password'}), 400
+    try:
+        data = request.json
+        if not data or 'email' not in data or 'password' not in data:
+            return jsonify({'message': 'Missing email or password'}), 400
 
-    user = User.query.filter_by(email=data['email']).first()
+        user = User.query.filter_by(email=data['email']).first()
+        if not user or not check_password_hash(user.password, data['password']):
+            return jsonify({'message': 'Invalid credentials'}), 401
 
-    if not user or not check_password_hash(user.password, data['password']):
-        return jsonify({'message': 'Invalid credentials'}), 401
-
-    token = jwt.encode({
-        'user_id': user.id,
-        'exp': datetime.utcnow() + timedelta(days=1),
-        'iat': datetime.utcnow()
-    }, current_app.config['SECRET_KEY'], algorithm="HS256")
-
-    return jsonify({
-        'message': 'Login successful!',
-        'token': token,
-        'user': {
-            'id': user.id,
-            'email': user.email,
-            'full_name': user.full_name,
-            'university': user.university
+        exp_time = datetime.utcnow() + timedelta(days=1)
+        token_payload = {
+            'user_id': str(user.id),
+            'exp': int(exp_time.timestamp()),
+            'iat': int(datetime.utcnow().timestamp())
         }
-    })
+
+        token = jwt.encode(
+            token_payload,
+            current_app.config['SECRET_KEY'],
+            algorithm="HS256"
+        )
+
+        return jsonify({
+            'message': 'Login successful!',
+            'token': token,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'full_name': user.full_name,
+                'university': user.university
+            }
+        }), 200
+    except Exception as e:
+        logging.error(f"Login error: {str(e)}")
+        return jsonify({'message': 'An error occurred'}), 500
+
+
+@auth_bp.route('/logout', methods=['POST'])
+@token_required
+def logout(current_user):
+    return jsonify({'message': 'Logout successful'}), 200

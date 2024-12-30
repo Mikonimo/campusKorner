@@ -4,7 +4,6 @@ initializes the app and sets configurations"""
 from flask import Flask
 from flask_cors import CORS
 from extensions import db, migrate
-from models import User, Product, ProductImage, Order, Review, Category
 import click
 
 
