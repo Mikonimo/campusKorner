@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -16,12 +18,29 @@ const Register = () => {
     };
 
     return (
-        <form onSubmit={handleRegister}>
-            <input type="email" value={email} onChange={(e) =>
-                setEmail(e.target.value)} placeholder="Email" required />
-            <input type="password" value={password} onChange={(e) =>
-                setPassword(e.target.value)} placeholder="Password" required />
-        </form>
+        <div className="auth-container">
+            <form onSubmit={handleRegister} className="auth-form">
+                <h2>Register</h2>
+                <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                    required
+                    className="auth-input"
+                />
+                <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    required
+                    className="auth-input"
+                />
+                <button type="submit" className="auth-button">Register</button>
+                <p>Already have an account? <span onClick={() => navigate('/login')} className="auth-link">Login</span></p>
+            </form>
+        </div>
     );
 };
 
