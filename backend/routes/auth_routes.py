@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Routes for authentication (login, register)"""
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import User, db
 import jwt
@@ -14,16 +14,19 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({'message': 'Token is missing'}), 401
+        if not token or not token.startswith('Bearer '):
+            return jsonify({'message': 'Invalid token format'}), 401
         try:
-            token = token.split()[1]  # Remove 'Bearer'  prefix
-            data = jwt.decode(token, 'your-secret-key', algorithms=["HS256"])
+            token = token.split()[1]
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
             current_user = User.query.get(data['user_id'])
-        except:
-            return jsonify({'message': 'Invalid token'}), 401
+            if not current_user:
+                raise ValueError('User not found')
+        except Exception as e:
+            return jsonify({'message': 'Invalid token', 'error': str(e)}), 401
         return f(current_user, *args, **kwargs)
     return decorated
+
 @auth_bp.route('/register', methods=['POST'])
 def register():
     """
@@ -85,8 +88,9 @@ def login():
 
     token = jwt.encode({
         'user_id': user.id,
-        'exp': datetime.utcnow() + timedelta(days=1)  # Fix typo from utcnown
-    }, 'your-secret-key', algorithm="HS256")
+        'exp': datetime.utcnow() + timedelta(days=1),
+        'iat': datetime.utcnow()
+    }, current_app.config['SECRET_KEY'], algorithm="HS256")
 
     return jsonify({
         'message': 'Login successful!',

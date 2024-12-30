@@ -3,6 +3,7 @@
 from flask import Blueprint, request, jsonify
 from models import Product, ProductImage, db
 from routes.auth_routes import token_required
+from sqlalchemy import or_
 
 product_bp = Blueprint('product_bp', __name__)
 
@@ -36,21 +37,21 @@ def get_products():
     """Get products with pagination and search"""
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    search = request.args.get('search', '')
-    university = request.args.get('university')
-    category = request.args.get('category')
+    sort_by = request.args.get('sort', 'created_at')
+    order = request.args.get('order', 'desc')
 
     query = Product.query
+    if search := request.args.get('search'):
+        query = query.filter(or_(
+            Product.name.ilike(f'%{search}%'),
+            Product.description.ilike(f'%{search}%')
+        ))
 
-    if search:
-        query = query.filter(Product.name.ilike(f'%{search}%'))
-    if university:
-        query = query.filter_by(university=university)
-    if category:
-        query = query.filter_by(category=category)
+    # Apply sorting
+    sort_column = getattr(Product, sort_by, Product.created_at)
+    query = query.order_by(sort_column.desc() if order == 'desc' else sort_column.asc())
 
-    pagination = query.order_by(Product.created_at.desc()).paginate(
-        page=page, per_page=per_page)
+    pagination = query.paginate(page=page, per_page=per_page)
 
     return jsonify({
         'products': [{

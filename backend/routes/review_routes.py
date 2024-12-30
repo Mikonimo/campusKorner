@@ -10,40 +10,48 @@ review_bp = Blueprint('review_bp', __name__)
 @review_bp.route('/reviews', methods=['POST'])
 @token_required
 def create_review(current_user):
-    data = request.get_json()
+    try:
+        data = request.get_json()
 
-    # Validate required fields
-    required_fields = ['reviewed_user_id', 'order_id', 'rating']
-    if not all(field in data for field in required_fields):
-        return jsonify({'error': 'Missing required fields'}), 400
+        # Validate required fields
+        required_fields = ['reviewed_user_id', 'order_id', 'rating']
+        if not all(field in data for field in required_fields):
+            return jsonify({'error': 'Missing required fields'}), 400
 
-    # Validate rating range
-    if not 1 <= data['rating'] <= 5:
-        return jsonify({'error': 'Rating must be between 1 and 5'}), 400
+        if not isinstance(data.get('rating'), (int, float)) or not 1 <= data['rating'] <= 5:
+            return jsonify({'error': 'Rating must be a number between 1 and 5'}), 400
 
-    # Check if review already exists
-    existing_review = Review.query.filter_by(
-        reviewer_id=current_user.id,
-        order_id=data['order_id']
-    ).first()
-    if existing_review:
-        return jsonify({'error': 'Review already exists for this order'}), 400
+        # Check if review already exists
+        existing_review = Review.query.filter_by(
+            reviewer_id=current_user.id,
+            order_id=data['order_id']
+        ).first()
+        if existing_review:
+            return jsonify({'error': 'Review already exists for this order'}), 400
 
-    # Verify order exists and belongs to reviewer
-    order = Order.query.get_or_404(data['order_id'])
-    if order.buyer_id != current_user.id:
-        return jsonify({'error': 'Unauthorized to review this order'}), 403
+        # Verify order exists and belongs to reviewer
+        order = Order.query.get_or_404(data['order_id'])
+        if order.buyer_id != current_user.id:
+            return jsonify({'error': 'Unauthorized to review this order'}), 403
 
-    review = Review(
-        reviewer_id=current_user.id,
-        reviewed_user_id=data['reviewed_user_id'],
-        order_id=data['order_id'],
-        rating=data['rating'],
-        comment=data.get('comment', '')
-    )
-    db.session.add(review)
-    db.session.commit()
-    return jsonify({'message': 'Review created', 'review_id': review.id}), 201
+        # Verify order completion
+        if order.status != 'completed':
+            return jsonify({'error': 'Can only review completed orders'}), 400
+
+        review = Review(
+            reviewer_id=current_user.id,
+            reviewed_user_id=data['reviewed_user_id'],
+            order_id=data['order_id'],
+            rating=data['rating'],
+            comment=data.get('comment', '')
+        )
+        db.session.add(review)
+        db.session.commit()
+        return jsonify({'message': 'Review created', 'review_id': review.id}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @review_bp.route('/reviews/user/<int:user_id>', methods=['GET'])
 def get_user_reviews(user_id):

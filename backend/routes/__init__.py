@@ -10,9 +10,9 @@ def init_routes(app):
     from .review_routes import review_bp
     from .profile_routes import profile_bp
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(product_bp)
-    app.register_blueprint(order_bp)
-    app.register_blueprint(category_bp)
-    app.register_blueprint(review_bp)
-    app.register_blueprint(profile_bp)
+    app.register_blueprint(auth_bp, url_prefix='/api')
+    app.register_blueprint(product_bp, url_prefix='/api')
+    app.register_blueprint(order_bp, url_prefix='/api')
+    app.register_blueprint(category_bp, url_prefix='/api')
+    app.register_blueprint(review_bp, url_prefix='/api')
+    app.register_blueprint(profile_bp, url_prefix='/api')
