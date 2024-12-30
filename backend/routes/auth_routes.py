@@ -3,11 +3,28 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import User, db
+import jwt
+from datetime import datetime, timedelta
+from functools import wraps
 
-auth = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth_bp', __name__)
 
 
-@auth.route('/register', methods=['POST'])
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'message': 'Token is missing'}), 401
+        try:
+            token = token.split()[1]  # Remove 'Bearer'  prefix
+            data = jwt.decode(token, 'your-secret-key', algorithms=["HS256"])
+            current_user = User.query.get(data['user_id'])
+        except:
+            return jsonify({'message': 'Invalid token'}), 401
+        return f(current_user, *args, **kwargs)
+    return decorated
+@auth_bp.route('/register', methods=['POST'])
 def register():
     """
     POST /register
@@ -15,15 +32,42 @@ def register():
     Returns:
         - JSON payload"""
     data = request.json
-    if not data or 'email' not in data or 'password' not in data:
-        return jsonify({'message': 'Missing email or password'}), 400
+    required_fields = ['email', 'password', 'fullname', 'university']
+
+    if not all(field in data for field in required_fields):
+        return jsonify({'message': 'Missing required fields'}), 400
+
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'message': 'Email already registered'}), 409
+
     hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
-    new_user = User(email=data['email'], password=hashed_password)
+
+    new_user = User(
+        email=data['email'],
+        password=hashed_password,
+        full_name=data['full_name'],
+        university=data['university']
+    )
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({'message': 'User registered successfully!'})
 
-@auth.route('/login', methods=['POST'])
+    token = jwt.encode({
+        'user_id': new_user.id,
+        'exp': datetime.utcnow() + timedelta(days=1)
+    },'your-secret-key', algorithm="HS256")
+
+    return jsonify({
+        'message': 'User registered successfully!',
+        'token': token,
+        'user': {
+            'id': new_user.id,
+            'email': new_user.email,
+            'full_name': new_user.full_name,
+            'university': new_user.university
+        }
+    }), 201
+
+@auth_bp.route('/login', methods=['POST'])
 def login():
     """
     POST /Login
@@ -33,7 +77,37 @@ def login():
     data = request.json
     if not data or 'email' not in data or 'password' not in data:
         return jsonify({'message': 'Missing email or password'}), 400
+
     user = User.query.filter_by(email=data['email']).first()
-    if user and check_password_hash(user.password, data['password']):
-        return jsonify({'message': 'Login successful!'})
-    return jsonify({'message': 'Invalid credentials'}), 401
+
+    if not user or not check_password_hash(user.password, data['password']):
+        return jsonify({'message': 'Invalid credentials'}), 401
+
+    token = jwt.encode({
+        'user_id': user.id,
+        'exp': datetime.utcnown() + timedelta(days=1)
+    }, 'your-secret-key', algorithm="HS256")
+
+    return jsonify({
+        'message': 'Login successful!',
+        'token': token,
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'full_name': user.full_name,
+            'university': user.university
+        }
+    })
+
+@auth_bp.route('/profile', methods=['GET'])
+@token_required
+def get_profile(current_user):
+    """Get user profile"""
+    return jsonify({
+        'id': current_user.id,
+        'email': current_user.email,
+        'full_name': current_user.full_name,
+        'university': current_user.university,
+        'is_seller': current_user.is_seller,
+        'is_verified': current_user.is_verified
+    })
