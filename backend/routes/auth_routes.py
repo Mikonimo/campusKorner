@@ -73,11 +73,7 @@ def register():
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    """
-    POST /Login
-        login a user
-    Returns:
-        - JSON payload"""
+    """Login user and return token"""
     try:
         data = request.json
         if not data or 'email' not in data or 'password' not in data:
@@ -87,15 +83,12 @@ def login():
         if not user or not check_password_hash(user.password, data['password']):
             return jsonify({'message': 'Invalid credentials'}), 401
 
-        exp_time = datetime.utcnow() + timedelta(days=1)
-        token_payload = {
-            'user_id': str(user.id),
-            'exp': int(exp_time.timestamp()),
-            'iat': int(datetime.utcnow().timestamp())
-        }
-
+        # Simplified token payload
         token = jwt.encode(
-            token_payload,
+            {
+                'user_id': user.id,
+                'exp': datetime.utcnow() + timedelta(days=1)
+            },
             current_app.config['SECRET_KEY'],
             algorithm="HS256"
         )
@@ -107,12 +100,13 @@ def login():
                 'id': user.id,
                 'email': user.email,
                 'full_name': user.full_name,
-                'university': user.university
+                'university': user.university,
+                'is_seller': user.is_seller
             }
         }), 200
     except Exception as e:
         logging.error(f"Login error: {str(e)}")
-        return jsonify({'message': 'An error occurred'}), 500
+        return jsonify({'message': 'An error occurred during login'}), 500
 
 
 @auth_bp.route('/logout', methods=['POST'])

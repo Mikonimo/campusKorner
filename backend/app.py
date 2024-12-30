@@ -11,9 +11,14 @@ def create_app():
     """Initializes Flask App"""
     app = Flask(__name__)
     CORS(app)
-    app.config['SQLALCHEMY_DATABASE_URI'] =\
-        'mysql+pymysql://mikonimo:8a3k5r13@localhost/campuskorner'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    # Load configuration before other initializations
+    app.config.from_object('config')
+
+    # Remove these lines since they're now in config.py
+    # app.config['SQLALCHEMY_DATABASE_URI'] = ...
+    # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = ...
+
     db.init_app(app)
     migrate.init_app(app, db)
 
