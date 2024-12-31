@@ -11,9 +11,9 @@ category_bp = Blueprint('category_bp', __name__)
 def get_categories():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
-    
+
     pagination = Category.query.paginate(page=page, per_page=per_page)
-    
+
     return jsonify({
         'categories': [{
             'id': c.id,

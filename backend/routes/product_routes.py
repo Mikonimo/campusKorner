@@ -35,42 +35,57 @@ def create_product(current_user):
 @product_bp.route('/products', methods=['GET'])
 def get_products():
     """Get products with pagination and search"""
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    sort_by = request.args.get('sort', 'created_at')
-    order = request.args.get('order', 'desc')
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        search = request.args.get('search', '')
+        category = request.args.get('category', '')
 
-    query = Product.query
-    if search := request.args.get('search'):
-        query = query.filter(or_(
-            Product.name.ilike(f'%{search}%'),
-            Product.description.ilike(f'%{search}%')
-        ))
+        query = Product.query.filter(Product.status == 'available')
 
-    # Apply sorting
-    sort_column = getattr(Product, sort_by, Product.created_at)
-    query = query.order_by(sort_column.desc() if order == 'desc' else sort_column.asc())
+        if search:
+            query = query.filter(or_(
+                Product.name.ilike(f'%{search}%'),
+                Product.description.ilike(f'%{search}%')
+            ))
 
-    pagination = query.paginate(page=page, per_page=per_page)
+        if category:
+            query = query.filter(Product.category == category)
 
-    return jsonify({
-        'products': [{
+        pagination = query.order_by(Product.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False)
+
+        products = [{
             'id': p.id,
             'name': p.name,
-            'price': p.price,
+            'price': float(p.price),
             'description': p.description,
             'category': p.category,
+            'condition': p.condition,
             'university': p.university,
             'status': p.status,
+            'created_at': p.created_at.isoformat(),
             'seller': {
                 'id': p.seller_id,
-                'name': p.seller.full_name if p.seller else None
-            }
-        } for p in pagination.items],
-        'total_pages': pagination.pages,
-        'current_page': page,
-        'total_products': pagination.total
-    }), 200
+                'name': p.seller.full_name,
+                'university': p.seller.university
+            },
+            'images': [{'url': img.image_url, 'is_primary': img.is_primary}
+                      for img in p.images]
+        } for p in pagination.items]
+
+        return jsonify({
+            'products': products,
+            'total': pagination.total,
+            'pages': pagination.pages,
+            'current_page': page,
+            'per_page': per_page,
+            'has_next': pagination.has_next,
+            'has_prev': pagination.has_prev
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @product_bp.route('/products/<int:id>', methods=['GET'])
 def get_product(id):

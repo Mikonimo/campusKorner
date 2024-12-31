@@ -1,87 +1,113 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import productService from '../services/productService';
 import api from '../services/api';
+import './ProductList.css';
 
 const ProductList = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
+    const [totalPages, setTotalPages] = useState(0);
+    const [addingToCart, setAddingToCart] = useState(false);
+    const [notification, setNotification] = useState(null);
 
-    useEffect(() => {
-        const fetchProducts = async () => {
+    const loadProducts = useCallback(async () => {
+        try {
             setLoading(true);
-            try {
-                const response = await api.getProducts(page);
-                const { products, hasMore } = response.data;
-                setProducts(prev => page === 1 ? products : [...prev, ...products]);
-                setHasMore(hasMore);
-            } catch (error) {
-                setError(error.response?.data?.message || 'Failed to load products');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchProducts();
+            const response = await productService.getProducts({
+                page,
+                perPage: 12
+            });
+
+            setProducts(response.data.products);
+            setTotalPages(response.data.pages);
+            setError(null);
+        } catch (err) {
+            console.error('Failed to load products:', err);
+            setError('Failed to load products. Please try again later.');
+        } finally {
+            setLoading(false);
+        }
     }, [page]);
 
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        }).format(price);
-    };
+    useEffect(() => {
+        loadProducts();
+    }, [loadProducts]);
 
     const handleAddToCart = async (productId) => {
         try {
+            setAddingToCart(true);
             await api.addToCart(productId, 1);
-            // Add cart update logic here
-        } catch (error) {
-            setError(error.response?.data?.message || 'Failed to add to cart');
+            setNotification({
+                type: 'success',
+                message: 'Product added to cart successfully!'
+            });
+        } catch (err) {
+            setNotification({
+                type: 'error',
+                message: err.response?.data?.error || 'Failed to add product to cart'
+            });
+        } finally {
+            setAddingToCart(false);
+            // Clear notification after 3 seconds
+            setTimeout(() => setNotification(null), 3000);
         }
     };
 
-    if (error) {
-        return <div className="error-message">{error}</div>;
-    }
+    if (loading) return <div className="loading">Loading products...</div>;
+    if (error) return <div className="error">{error}</div>;
 
     return (
-        <div className="product-container">
-            <h1>Available Products</h1>
-            {loading && products.length === 0 ? (
-                <div className="loading-spinner">Loading products...</div>
-            ) : (
-                <>
-                    <div className="product-grid">
-                        {products.length > 0 ? (
-                            products.map((product) => (
-                                <div key={product.id} className="product-card">
-                                    <h3 className="product-title">{product.name}</h3>
-                                    <span className="product-category">{product.category}</span>
-                                    <p className="product-price">{formatPrice(product.price)}</p>
-                                    <button
-                                        className="product-button"
-                                        onClick={() => handleAddToCart(product.id)}
-                                        disabled={loading}
-                                    >
-                                        Add to Cart
-                                    </button>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="no-products">No products available</div>
-                        )}
+        <div className="products-container">
+            {notification && (
+                <div className={`notification ${notification.type}`}>
+                    {notification.message}
+                </div>
+            )}
+            <div className="products-grid">
+                {products.map(product => (
+                    <div key={product.id} className="product-card">
+                        <div className="product-image">
+                            {product.images?.[0]?.url ? (
+                                <img src={product.images[0].url} alt={product.name} />
+                            ) : (
+                                <div className="no-image">No Image</div>
+                            )}
+                        </div>
+                        <div className="product-info">
+                            <h3>{product.name}</h3>
+                            <p className="price">${product.price.toFixed(2)}</p>
+                            <p className="university">{product.university}</p>
+                            <p className="seller">Seller: {product.seller.name}</p>
+                            <button
+                                className="add-to-cart-btn"
+                                onClick={() => handleAddToCart(product.id)}
+                                disabled={addingToCart}
+                            >
+                                {addingToCart ? 'Adding...' : 'Add to Cart'}
+                            </button>
+                        </div>
                     </div>
-                    {hasMore && (
-                        <button
-                            className="load-more"
-                            onClick={() => setPage(p => p + 1)}
-                            disabled={loading}
-                        >
-                            {loading ? 'Loading...' : 'Load More'}
-                        </button>
-                    )}
-                </>
+                ))}
+            </div>
+
+            {totalPages > 1 && (
+                <div className="pagination">
+                    <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                    >
+                        Previous
+                    </button>
+                    <span>Page {page} of {totalPages}</span>
+                    <button
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                    >
+                        Next
+                    </button>
+                </div>
             )}
         </div>
     );

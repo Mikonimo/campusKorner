@@ -15,20 +15,17 @@ const axiosInstance = axios.create({
 setupInterceptors(axiosInstance);
 
 const api = {
+    axiosInstance, // Export axiosInstance for other services
+
     // Auth
     login: (data) => axiosInstance.post('/login', data),
     register: (data) => axiosInstance.post('/register', {
         email: data.email,
         password: data.password,
-        full_name: data.fullname,  // Changed to match backend
+        full_name: data.fullname,
         university: data.university
     }),
-    logout: () => axiosInstance.post('/logout'),  // Add logout endpoint
-
-    // Products
-    getProducts: (page = 1, limit = 10) =>
-        axiosInstance.get(`/products?page=${page}&limit=${limit}`),
-    getProduct: (id) => axiosInstance.get(`/products/${id}`),
+    logout: () => axiosInstance.post('/logout'),
 
     // Orders
     createOrder: (data) => axiosInstance.post('/orders', data),

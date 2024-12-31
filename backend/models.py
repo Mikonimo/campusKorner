@@ -110,3 +110,22 @@ class Category(db.Model):
 
     def __repr__(self):
         return f'<Category {self.name}>'
+
+
+class CartItem(db.Model):
+    """Cart Item database model"""
+    __tablename__ = 'cart_items'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
+    updated_at = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = db.relationship('User', backref=db.backref('cart_items', lazy=True))
+    product = db.relationship('Product', backref=db.backref('cart_items', lazy=True))
+
+    def __repr__(self):
+        return f'<CartItem user_id={self.user_id} product_id={self.product_id}>'
