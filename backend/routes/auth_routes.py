@@ -56,9 +56,9 @@ def register():
     db.session.commit()
 
     token = jwt.encode({
-        'user_id': str(new_user.id),
-        'exp': str(datetime.utcnow() + timedelta(days=1))
-    },'your-secret-key', algorithm="HS256")
+        'user_id': new_user.id,
+        'exp': datetime.utcnow() + timedelta(days=1)
+    }, current_app.config['SECRET_KEY'], algorithm="HS256")
 
     return jsonify({
         'message': 'User registered successfully!',
@@ -66,8 +66,9 @@ def register():
         'user': {
             'id': new_user.id,
             'email': new_user.email,
-            'full_name': new_user.full_name,
-            'university': new_user.university
+            'fullname': new_user.full_name,  # Changed to match frontend
+            'university': new_user.university,
+            'is_seller': new_user.is_seller
         }
     }), 201
 
@@ -99,7 +100,7 @@ def login():
             'user': {
                 'id': user.id,
                 'email': user.email,
-                'full_name': user.full_name,
+                'fullname': user.full_name,  # Changed to match frontend
                 'university': user.university,
                 'is_seller': user.is_seller
             }
