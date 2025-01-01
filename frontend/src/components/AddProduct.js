@@ -30,24 +30,27 @@ const AddProduct = () => {
         try {
             const formDataToSend = new FormData();
             
-            // Convert price to string explicitly
+            // Ensure price is sent as a string
+            const priceValue = parseFloat(formData.price).toFixed(2);
+            
             formDataToSend.append('name', formData.name);
             formDataToSend.append('description', formData.description);
-            formDataToSend.append('price', formData.price.toString());
+            formDataToSend.append('price', priceValue);
             formDataToSend.append('category', formData.category);
             formDataToSend.append('condition', formData.condition);
 
-            // Handle images separately
-            if (formData.images.length > 0) {
-                formData.images.forEach(image => {
-                    formDataToSend.append('images', image);
-                });
+            // Add each image file individually
+            if (formData.images && formData.images.length > 0) {
+                for (let i = 0; i < formData.images.length; i++) {
+                    formDataToSend.append(`image${i}`, formData.images[i]);
+                }
             }
 
-            await productService.createProduct(formDataToSend);
+            const response = await productService.createProduct(formDataToSend);
+            console.log('Product created:', response);
             navigate('/');
         } catch (err) {
-            console.error('Error creating product:', err);
+            console.error('Error details:', err);
             setError(err.response?.data?.error || 'Failed to create product');
         } finally {
             setLoading(false);

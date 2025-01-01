@@ -17,11 +17,10 @@ const productService = {
         api.axiosInstance.get(`/products/${id}`),
 
     createProduct: (formData) => {
+        // Don't set any Content-Type header, let the browser handle it
         return api.axiosInstance.post('/products', formData, {
             headers: {
-                // Remove Content-Type header to let browser set it automatically with boundary
-                'Content-Type': undefined,
-                'Accept': 'application/json',
+                'Accept': 'application/json'
             }
         });
     },

@@ -17,15 +17,14 @@ def create_product(current_user):
         return jsonify({'error': 'Seller account required'}), 403
 
     try:
-        print("Form data received:", request.form)  # Debug print
-        print("Files received:", request.files)     # Debug print
+        # Debug prints
+        print("Request content type:", request.content_type)
+        print("Form data:", request.form.to_dict())
+        print("Files:", request.files.to_dict())
 
-        # Ensure uploads directory exists
-        upload_dir = os.path.join(os.getcwd(), 'uploads')
-        if not os.path.exists(upload_dir):
-            os.makedirs(upload_dir)
+        if not request.form:
+            return jsonify({'error': 'No form data received'}), 400
 
-        # Get form data
         name = request.form.get('name')
         description = request.form.get('description')
         price = request.form.get('price')
@@ -40,6 +39,7 @@ def create_product(current_user):
         except ValueError:
             return jsonify({'error': 'Invalid price format'}), 400
 
+        # Create product
         product = Product(
             name=name,
             description=description,
@@ -51,21 +51,21 @@ def create_product(current_user):
         )
 
         db.session.add(product)
-        db.session.flush()
+        db.session.commit()  # Commit to get product ID
 
-        # Handle image uploads
-        if 'images' in request.files:
-            images = request.files.getlist('images')
-            for idx, image in enumerate(images):
-                if image and allowed_file(image.filename):
-                    filename = secure_filename(f"{product.id}_{idx}_{image.filename}")
-                    filepath = os.path.join(upload_dir, filename)
-                    image.save(filepath)
+        # Handle images if present
+        if request.files:
+            for key in request.files:
+                file = request.files[key]
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(f"{product.id}_{key}_{file.filename}")
+                    filepath = os.path.join(os.getcwd(), 'uploads', filename)
+                    file.save(filepath)
 
                     product_image = ProductImage(
                         product_id=product.id,
                         image_url=f"/uploads/{filename}",
-                        is_primary=(idx == 0)
+                        is_primary=(key == '0')
                     )
                     db.session.add(product_image)
 
@@ -100,7 +100,7 @@ def get_products():
         if search:
             query = query.filter(or_(
                 Product.name.ilike(f'%{search}%'),
-                Product.description.ilike(f'%{search}%')
+                Product.description.ilike(f'%search%')
             ))
 
         if category:
