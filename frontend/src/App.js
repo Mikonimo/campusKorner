@@ -6,6 +6,7 @@ import ProductList from './components/ProductList';
 import Navigation from './components/Navigation';
 import Profile from './components/Profile';
 import Cart from './components/Cart';
+import AddProduct from './components/AddProduct';
 
 class ErrorBoundary extends React.Component {
   state = { hasError: false };
@@ -30,9 +31,9 @@ const ProtectedRoute = ({ children }) => {
 const App = () => (
   <ErrorBoundary>
     <Router>
-      <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
-        <div>
-          <Navigation />
+      <div className="app">
+        <Navigation />
+        <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
           <Routes>
             <Route path="/" element={
               <ProtectedRoute>
@@ -51,10 +52,15 @@ const App = () => (
                 <Cart />
               </ProtectedRoute>
             } />
+            <Route path="/products" element={
+              <ProtectedRoute>
+                <AddProduct />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </div>
-      </Suspense>
+        </Suspense>
+      </div>
     </Router>
   </ErrorBoundary>
 );

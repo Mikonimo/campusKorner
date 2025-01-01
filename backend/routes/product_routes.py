@@ -4,6 +4,8 @@ from flask import Blueprint, request, jsonify
 from models import Product, ProductImage, db
 from routes.auth_routes import token_required
 from sqlalchemy import or_
+from werkzeug.utils import secure_filename
+import os
 
 product_bp = Blueprint('product_bp', __name__)
 
@@ -14,23 +16,75 @@ def create_product(current_user):
     if not current_user.is_seller:
         return jsonify({'error': 'Seller account required'}), 403
 
-    data = request.get_json()
-    required_fields = ['name', 'description', 'price', 'category']
-    if not all(field in data for field in required_fields):
-        return jsonify({'error': 'Missing required fields'}), 400
+    try:
+        print("Form data received:", request.form)  # Debug print
+        print("Files received:", request.files)     # Debug print
 
-    product = Product(
-        name=data['name'],
-        description=data['description'],
-        price=data['price'],
-        category=data['category'],
-        condition=data.get('condition'),
-        seller_id=current_user.id,
-        university=current_user.university
-    )
-    db.session.add(product)
-    db.session.commit()
-    return jsonify({'message': 'Product created', 'product': product.id}), 201
+        # Ensure uploads directory exists
+        upload_dir = os.path.join(os.getcwd(), 'uploads')
+        if not os.path.exists(upload_dir):
+            os.makedirs(upload_dir)
+
+        # Get form data
+        name = request.form.get('name')
+        description = request.form.get('description')
+        price = request.form.get('price')
+        category = request.form.get('category')
+        condition = request.form.get('condition')
+
+        if not all([name, description, price, category]):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        try:
+            price_float = float(price)
+        except ValueError:
+            return jsonify({'error': 'Invalid price format'}), 400
+
+        product = Product(
+            name=name,
+            description=description,
+            price=price_float,
+            category=category,
+            condition=condition,
+            seller_id=current_user.id,
+            university=current_user.university
+        )
+
+        db.session.add(product)
+        db.session.flush()
+
+        # Handle image uploads
+        if 'images' in request.files:
+            images = request.files.getlist('images')
+            for idx, image in enumerate(images):
+                if image and allowed_file(image.filename):
+                    filename = secure_filename(f"{product.id}_{idx}_{image.filename}")
+                    filepath = os.path.join(upload_dir, filename)
+                    image.save(filepath)
+
+                    product_image = ProductImage(
+                        product_id=product.id,
+                        image_url=f"/uploads/{filename}",
+                        is_primary=(idx == 0)
+                    )
+                    db.session.add(product_image)
+
+        db.session.commit()
+        return jsonify({
+            'message': 'Product created successfully',
+            'product_id': product.id
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error creating product:", str(e))  # Debug print
+        return jsonify({'error': str(e)}), 500
+
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @product_bp.route('/products', methods=['GET'])
 def get_products():

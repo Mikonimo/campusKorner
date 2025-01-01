@@ -1,41 +1,39 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import './Navigation.css';
 
 const Navigation = () => {
-    const isAuthenticated = localStorage.getItem('token');
+    const navigate = useNavigate();
+    const isAuthenticated = !!localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isSeller = user.is_seller;
 
-    const handleLogout = async () => {
-        try {
-            await api.logout();
-        } catch (error) {
-            console.error('Logout request failed:', error);
-        } finally {
-            localStorage.clear();
-            window.location.href = '/login';
-        }
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
     };
 
     return (
-        <nav className="nav-container">
-            <Link to="/" className="nav-brand">
+        <nav className="navigation">
+            <div className="nav-brand" onClick={() => navigate('/')}>
                 CampusKorner
-            </Link>
-            <div className="nav-links">
+            </div>
+            <div className="nav-buttons">
                 {isAuthenticated ? (
                     <>
-                        <Link to="/" className="nav-link">Products</Link>
-                        <Link to="/cart" className="nav-link">Cart</Link>
-                        <Link to="/profile" className="nav-link">
-                            {user.fullname ? `Profile (${user.fullname})` : 'Profile'}
-                        </Link>
-                        <button onClick={handleLogout} className="nav-button">Logout</button>
+                        <button onClick={() => navigate('/')}>Products</button>
+                        {isSeller && (
+                            <button onClick={() => navigate('/products')}>Sell</button>
+                        )}
+                        <button onClick={() => navigate('/cart')}>Cart</button>
+                        <button onClick={() => navigate('/profile')}>Profile</button>
+                        <button onClick={handleLogout} className="logout">Logout</button>
                     </>
                 ) : (
                     <>
-                        <Link to="/login" className="nav-link">Login</Link>
-                        <Link to="/register" className="nav-link">Register</Link>
+                        <button onClick={() => navigate('/login')}>Login</button>
+                        <button onClick={() => navigate('/register')}>Register</button>
                     </>
                 )}
             </div>

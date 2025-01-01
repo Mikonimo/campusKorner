@@ -36,11 +36,11 @@ const Login = () => {
         setIsLoading(true);
         try {
             const response = await api.login({ email, password });
-            // Ensure token is stored with Bearer prefix
             const token = response.data.token;
             localStorage.setItem('token', token.startsWith('Bearer ') ? token : `Bearer ${token}`);
             localStorage.setItem('user', JSON.stringify(response.data.user));
-            navigate('/');
+            // Force a reload to update navigation state
+            window.location.href = '/';
         } catch (error) {
             const errorMessage = error.message === 'Request timeout'
                 ? 'Connection timeout. Please try again.'

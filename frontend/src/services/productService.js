@@ -16,8 +16,15 @@ const productService = {
     getProduct: (id) =>
         api.axiosInstance.get(`/products/${id}`),
 
-    createProduct: (productData) =>
-        api.axiosInstance.post('/products', productData),
+    createProduct: (formData) => {
+        return api.axiosInstance.post('/products', formData, {
+            headers: {
+                // Remove Content-Type header to let browser set it automatically with boundary
+                'Content-Type': undefined,
+                'Accept': 'application/json',
+            }
+        });
+    },
 
     updateProduct: (id, updateData) =>
         api.axiosInstance.put(`/products/${id}`, updateData),

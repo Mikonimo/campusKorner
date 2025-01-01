@@ -40,6 +40,15 @@ const api = {
     getProfile: () => axiosInstance.get('/profile'),
     updateProfile: (data) => axiosInstance.put('/profile/update', data),
     becomeSeller: () => axiosInstance.post('/profile/seller'),
+
+    // Products
+    getProducts: (params) => axiosInstance.get('/products', { params }),
+    getProduct: (id) => axiosInstance.get(`/products/${id}`),
+    createProduct: (data) => axiosInstance.post('/products', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    updateProduct: (id, data) => axiosInstance.put(`/products/${id}`, data),
+    deleteProduct: (id) => axiosInstance.delete(`/products/${id}`),
 };
 
 export default api;
