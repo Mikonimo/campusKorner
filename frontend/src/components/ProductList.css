@@ -59,6 +59,12 @@
     margin: 5px 0;
 }
 
+.category {
+    color:#ddd;
+    font-size: 1.1em;
+    margin: 5px 0;
+}
+
 .university, .seller {
     color: #666;
     font-size: 0.9em;

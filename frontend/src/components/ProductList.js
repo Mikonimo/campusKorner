@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import productService from '../services/productService';
 import api from '../services/api';
 import './ProductList.css';
+import { useNavigate } from 'react-router-dom';
 
 const ProductList = () => {
+    const navigate = useNavigate();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);

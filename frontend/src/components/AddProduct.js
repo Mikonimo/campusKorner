@@ -29,10 +29,10 @@ const AddProduct = () => {
         setLoading(true);
         try {
             const formDataToSend = new FormData();
-            
+
             // Ensure price is sent as a string
             const priceValue = parseFloat(formData.price).toFixed(2);
-            
+
             formDataToSend.append('name', formData.name);
             formDataToSend.append('description', formData.description);
             formDataToSend.append('price', priceValue);

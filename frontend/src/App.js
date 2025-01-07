@@ -7,6 +7,7 @@ import Navigation from './components/Navigation';
 import Profile from './components/Profile';
 import Cart from './components/Cart';
 import AddProduct from './components/AddProduct';
+import EditProduct from './components/EditProduct';
 
 class ErrorBoundary extends React.Component {
   state = { hasError: false };
@@ -57,6 +58,14 @@ const App = () => (
                 <AddProduct />
               </ProtectedRoute>
             } />
+            <Route
+              path="/products/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditProduct />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
