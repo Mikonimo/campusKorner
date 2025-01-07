@@ -29,6 +29,18 @@ const api = {
     getUserOrders: (role = 'buyer', page = 1) =>
         axiosInstance.get('/user/orders', {
             params: { role, page, per_page: 10 }
+        }).then(response => {
+            console.log('API response:', response); // Debug log
+            return {
+                data: {
+                    orders: response.data.orders || [],
+                    total_pages: response.data.total_pages || 1,
+                    current_page: response.data.current_page || 1
+                }
+            };
+        }).catch(error => {
+            console.error('API error:', error);
+            throw error;
         }),
     updateOrderStatus: (orderId, status) =>
         axiosInstance.put(`/orders/${orderId}/status`, { status }),

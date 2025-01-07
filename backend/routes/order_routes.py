@@ -38,7 +38,7 @@ def create_order(current_user):
             )
             db.session.add(order_item)
             total_amount += product.price * item['quantity']
-            
+
             # Update product status
             product.status = 'pending'
 
@@ -90,37 +90,41 @@ def update_order_status(current_user, id):
 @order_bp.route('/user/orders', methods=['GET'])
 @token_required
 def get_user_orders(current_user):
-    role = request.args.get('role', 'buyer')
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
+    try:
+        role = request.args.get('role', 'buyer')
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
 
-    query = Order.query
-    if role == 'buyer':
-        query = query.filter_by(buyer_id=current_user.id)
-    else:
-        query = query.filter_by(seller_id=current_user.id)
+        query = Order.query
+        if role == 'buyer':
+            query = query.filter_by(buyer_id=current_user.id)
+        else:
+            query = query.filter_by(seller_id=current_user.id)
 
-    pagination = query.order_by(Order.created_at.desc()).paginate(
-        page=page, per_page=per_page)
+        pagination = query.order_by(Order.created_at.desc()).paginate(
+            page=page, per_page=per_page)
 
-    return jsonify({
-        'orders': [{
-            'id': o.id,
-            'status': o.status,
-            'created_at': o.created_at.isoformat(),
-            'items': [{
-                'id': item.product.id,
-                'name': item.product.name,
-                'price': item.price,
-                'quantity': item.quantity
-            } for item in o.items],
-            'total': sum(item.price * item.quantity for item in o.items),
-            'buyer': {
-                'id': o.buyer.id,
-                'name': o.buyer.full_name
-            } if role == 'seller' else None
-        } for o in pagination.items],
-        'total_pages': pagination.pages,
-        'current_page': page,
-        'total_orders': pagination.total
-    }), 200
+        return jsonify({
+            'orders': [{
+                'id': o.id,
+                'status': o.status,
+                'created_at': o.created_at.isoformat(),
+                'items': [{
+                    'id': item.product.id,
+                    'name': item.product.name,
+                    'price': float(item.price),
+                    'quantity': item.quantity
+                } for item in o.items] if o.items else [],
+                'total': float(sum(item.price * item.quantity for item in o.items)),
+                'buyer': {
+                    'id': o.buyer.id,
+                    'name': o.buyer.full_name
+                } if role == 'seller' and o.buyer else None
+            } for o in pagination.items],
+            'total_pages': pagination.pages,
+            'current_page': page,
+            'total_orders': pagination.total
+        }), 200
+    except Exception as e:
+        print(f"Error in get_user_orders: {str(e)}")  # Debug log
+        return jsonify({'error': 'Failed to fetch orders', 'details': str(e)}), 500
