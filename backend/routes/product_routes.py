@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Product Routes"""
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_from_directory
 from models import Product, ProductImage, db
 from routes.auth_routes import token_required
 from sqlalchemy import or_
@@ -14,6 +14,12 @@ APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(APP_ROOT, '..', 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+def get_full_url(path):
+    """Helper to get full URL for image paths"""
+    if path.startswith('http'):
+        return path
+    return f"{request.host_url.rstrip('/')}/api{path}"
 
 @product_bp.route('/products', methods=['POST'])
 @token_required
@@ -130,8 +136,10 @@ def get_products():
                 'name': p.seller.full_name,
                 'university': p.seller.university
             },
-            'images': [{'url': img.image_url, 'is_primary': img.is_primary}
-                      for img in p.images]
+            'images': [{
+                'url': get_full_url(img.image_url),
+                'is_primary': img.is_primary
+            } for img in p.images]
         } for p in pagination.items]
 
         return jsonify({
@@ -166,7 +174,12 @@ def get_product(id):
         'description': product.description,
         'category': product.category,
         'university': product.university,
-        'status': product.status
+        'status': product.status,
+        'images': [{
+            'id': img.id,
+            'url': get_full_url(img.image_url),
+            'is_primary': img.is_primary
+        } for img in product.images]
     }), 200
 
 @product_bp.route('/products/<int:id>', methods=['PUT', 'DELETE'])
@@ -235,3 +248,7 @@ def modify_product(current_user, id):
 
     db.session.commit()
     return jsonify({'message': 'Product updated'}), 200
+
+@product_bp.route('/uploads/<path:filename>')
+def serve_uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)

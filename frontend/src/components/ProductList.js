@@ -75,7 +75,15 @@ const ProductList = () => {
                         <div className="product-image-gallery">
                             {product.images && product.images.length > 0 ? (
                                 product.images.map((img, idx) => (
-                                    <img key={idx} src={img.url} alt={product.name} />
+                                    <img
+                                        key={idx}
+                                        src={img.url}
+                                        alt={`${product.name} ${idx + 1}`}
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = 'placeholder-image.png'; // Add a placeholder image
+                                        }}
+                                    />
                                 ))
                             ) : (
                                 <div className="no-image">No Image</div>

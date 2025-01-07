@@ -40,3 +40,17 @@
 .product-form button:disabled {
     background-color: #cbd5e0;
 }
+
+.delete-btn {
+  background-color: #e53e3e;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  border-radius: 4px;
+}
+
+.delete-btn:hover {
+  background-color: #c53030;
+}

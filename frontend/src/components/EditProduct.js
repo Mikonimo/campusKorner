@@ -128,6 +128,15 @@ const EditProduct = () => {
           <option value="books">Books</option>
           <option value="electronics">Electronics</option>
           <option value="furniture">Furniture</option>
+          <option value="books">Books</option>
+          <option value="clothing">Clothing</option>
+          <option value="appliances">Appliances</option>
+          <option value="kitchen">Kitchen</option>
+          <option value="sports">Sports</option>
+          <option value="beauty">Beauty</option>
+          <option value="health">Health</option>
+          <option value="services">Services</option>
+          <option value="other">Other</option>
         </select>
         <select
           name="condition"
@@ -137,6 +146,14 @@ const EditProduct = () => {
         >
           <option value="new">New</option>
           <option value="good">Good</option>
+          <option value="like-new">Like New</option>
+          <option value="fair">Fair</option>
+          <option value="used">Used</option>
+          <option value="refurbished">Refurbished</option>
+          <option value="open-box">Open Box</option>
+          <option value="damaged">Damaged</option>
+          <option value="defective">Defective</option>
+          <option value="poor">Poor</option>
         </select>
         <div className="existing-images">
           {existingImages.map((img) => (
