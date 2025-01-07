@@ -174,7 +174,6 @@ def get_product(id):
 def modify_product(current_user, id):
     """Modify or delete a product"""
     product = Product.query.get_or_404(id)
-
     if product.seller_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
 
@@ -183,10 +182,56 @@ def modify_product(current_user, id):
         db.session.commit()
         return jsonify({'message': 'Product deleted'}), 200
 
-    data = request.get_json()
-    for key, value in data.items():
-        if hasattr(product, key):
-            setattr(product, key, value)
+    # Handle multipart form data for updates
+    print("Request content type:", request.content_type)
+    removed_images = request.form.get('removedImages')
+    if removed_images:
+        removed_list = []
+        try:
+            removed_list = eval(removed_images)  # or json.loads
+        except:
+            pass
+        for img_id in removed_list:
+            img = ProductImage.query.filter_by(id=img_id, product_id=product.id).first()
+            if img:
+                # Remove file from disk
+                file_path = os.path.join(UPLOAD_FOLDER, os.path.basename(img.image_url))
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                db.session.delete(img)
+        db.session.commit()
+
+    # Update product fields
+    # (If any form field is missing, the old value remains)
+    name = request.form.get('name')
+    if name: product.name = name
+    description = request.form.get('description')
+    if description: product.description = description
+    price = request.form.get('price')
+    if price:
+        try:
+            product.price = float(price)
+        except ValueError:
+            return jsonify({'error': 'Invalid price format'}), 400
+    category = request.form.get('category')
+    if category: product.category = category
+    condition = request.form.get('condition')
+    if condition: product.condition = condition
+
+    # Process newly uploaded images
+    if request.files:
+        for key in request.files:
+            file = request.files[key]
+            if file and allowed_file(file.filename):
+                filename = secure_filename(f"{product.id}_{key}_{file.filename}")
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                product_image = ProductImage(
+                    product_id=product.id,
+                    image_url=f"/uploads/{filename}",
+                    is_primary=False  # Or decide your own logic
+                )
+                db.session.add(product_image)
 
     db.session.commit()
     return jsonify({'message': 'Product updated'}), 200

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
@@ -16,6 +15,9 @@ const EditProduct = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
+  const [removedImages, setRemovedImages] = useState([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -28,6 +30,8 @@ const EditProduct = () => {
           category: data.category,
           condition: data.condition || 'new'
         });
+        const productImages = data.images || [];
+        setExistingImages(productImages);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to load product');
       } finally {
@@ -41,10 +45,34 @@ const EditProduct = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleNewImages = (e) => {
+    setNewImages([...e.target.files]);
+  };
+
+  const handleRemoveExistingImage = (imageId) => {
+    setRemovedImages(prev => [...prev, imageId]);
+    setExistingImages(prev => prev.filter(img => img.id !== imageId));
+  };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await api.updateProduct(id, formData);
+      const fd = new FormData();
+      fd.append('name', formData.name);
+      fd.append('description', formData.description);
+      fd.append('price', formData.price);
+      fd.append('category', formData.category);
+      fd.append('condition', formData.condition);
+
+      newImages.forEach((file, index) => {
+        fd.append(`newImage${index}`, file);
+      });
+
+      if (removedImages.length > 0) {
+        fd.append('removedImages', JSON.stringify(removedImages));
+      }
+
+      await api.updateProduct(id, fd); 
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update product');
@@ -66,7 +94,7 @@ const EditProduct = () => {
   return (
     <div className="product-form-container">
       <h2>Edit Product</h2>
-      <form onSubmit={handleUpdate} className="product-form">
+      <form onSubmit={handleUpdate} className="product-form" encType="multipart/form-data">
         <input
           type="text"
           name="name"
@@ -97,11 +125,9 @@ const EditProduct = () => {
           onChange={handleChange}
           required
         >
-          {/* ...existing options... */}
           <option value="books">Books</option>
           <option value="electronics">Electronics</option>
           <option value="furniture">Furniture</option>
-          {/* ...existing options... */}
         </select>
         <select
           name="condition"
@@ -109,11 +135,20 @@ const EditProduct = () => {
           onChange={handleChange}
           required
         >
-          {/* ...existing options... */}
           <option value="new">New</option>
           <option value="good">Good</option>
-          {/* ...existing options... */}
         </select>
+        <div className="existing-images">
+          {existingImages.map((img) => (
+            <div key={img.id} className="existing-image-item">
+              <img src={img.url} alt="Existing" />
+              <button type="button" onClick={() => handleRemoveExistingImage(img.id)}>
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+        <input type="file" multiple accept="image/*" onChange={handleNewImages} />
         <button type="submit">Update Product</button>
       </form>
       <button onClick={handleDelete} className="delete-btn">
