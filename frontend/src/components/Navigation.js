@@ -27,6 +27,7 @@ const Navigation = () => {
                             <button onClick={() => navigate('/products')}>Sell</button>
                         )}
                         <button onClick={() => navigate('/cart')}>Cart</button>
+                        <button onClick={() => navigate('/orders')}>Orders</button>
                         <button onClick={() => navigate('/profile')}>Profile</button>
                         <button onClick={handleLogout} className="logout">Logout</button>
                     </>

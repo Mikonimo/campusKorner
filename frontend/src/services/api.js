@@ -25,8 +25,13 @@ const api = {
     logout: () => axiosInstance.post('/logout'),
 
     // Orders
-    createOrder: (data) => axiosInstance.post('/orders', data),
-    getUserOrders: () => axiosInstance.get('/orders/user'),
+    createOrder: (items) => axiosInstance.post('/orders', { items }),
+    getUserOrders: (role = 'buyer', page = 1) =>
+        axiosInstance.get('/user/orders', {
+            params: { role, page, per_page: 10 }
+        }),
+    updateOrderStatus: (orderId, status) =>
+        axiosInstance.put(`/orders/${orderId}/status`, { status }),
 
     // Cart
     addToCart: (productId, quantity) =>

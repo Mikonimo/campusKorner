@@ -8,6 +8,7 @@ import Profile from './components/Profile';
 import Cart from './components/Cart';
 import AddProduct from './components/AddProduct';
 import EditProduct from './components/EditProduct';
+import Orders from './components/Orders';
 
 class ErrorBoundary extends React.Component {
   state = { hasError: false };
@@ -66,6 +67,11 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/orders" element={
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
