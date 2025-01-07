@@ -12,6 +12,8 @@ const ProductList = () => {
     const [addingToCart, setAddingToCart] = useState(false);
     const [notification, setNotification] = useState(null);
 
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
     const loadProducts = useCallback(async () => {
         try {
             setLoading(true);
@@ -78,8 +80,17 @@ const ProductList = () => {
                         <div className="product-info">
                             <h3>{product.name}</h3>
                             <p className="price">${product.price.toFixed(2)}</p>
+                            <p className="category">{product.category}</p>
                             <p className="university">{product.university}</p>
                             <p className="seller">Seller: {product.seller.name}</p>
+                            {user.id === product.seller.id && (
+                                <button
+                                    className="edit-product-btn"
+                                    onClick={() => navigate(`/products/${product.id}/edit`)}
+                                >
+                                    Edit
+                                </button>
+                            )}
                             <button
                                 className="add-to-cart-btn"
                                 onClick={() => handleAddToCart(product.id)}

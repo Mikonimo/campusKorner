@@ -9,6 +9,12 @@ import os
 
 product_bp = Blueprint('product_bp', __name__)
 
+# Define upload folder path and ensure it exists
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(APP_ROOT, '..', 'uploads')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
 @product_bp.route('/products', methods=['POST'])
 @token_required
 def create_product(current_user):
@@ -59,7 +65,7 @@ def create_product(current_user):
                 file = request.files[key]
                 if file and allowed_file(file.filename):
                     filename = secure_filename(f"{product.id}_{key}_{file.filename}")
-                    filepath = os.path.join(os.getcwd(), 'uploads', filename)
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
                     file.save(filepath)
 
                     product_image = ProductImage(
