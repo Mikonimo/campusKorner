@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """Database Models e.g., User, Product"""
 from extensions import db
