@@ -72,9 +72,11 @@ const ProductList = () => {
             <div className="products-grid">
                 {products.map(product => (
                     <div key={product.id} className="product-card">
-                        <div className="product-image">
-                            {product.images?.[0]?.url ? (
-                                <img src={product.images[0].url} alt={product.name} />
+                        <div className="product-image-gallery">
+                            {product.images && product.images.length > 0 ? (
+                                product.images.map((img, idx) => (
+                                    <img key={idx} src={img.url} alt={product.name} />
+                                ))
                             ) : (
                                 <div className="no-image">No Image</div>
                             )}

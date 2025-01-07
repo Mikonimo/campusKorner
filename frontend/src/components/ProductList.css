@@ -154,3 +154,26 @@
         opacity: 1;
     }
 }
+
+.edit-product-btn {
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  border-radius: 4px;
+}
+
+.product-image-gallery {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.product-image-gallery img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
