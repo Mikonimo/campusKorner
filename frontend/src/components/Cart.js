@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';  // Add this import
 import api from '../services/api';
 
 const Cart = () => {
+    const navigate = useNavigate();  // Add this hook
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -50,11 +52,24 @@ const Cart = () => {
 
     const handleCheckout = async () => {
         try {
-            await api.createOrder({ items: cartItems });
+            if (cartItems.length === 0) {
+                setError('Your cart is empty');
+                return;
+            }
+
+            const orderItems = cartItems.map(item => ({
+                id: item.product_id || item.id, // Handle both possible property names
+                quantity: item.quantity
+            }));
+
+            await api.createOrder(orderItems);
+            await api.getCart(); // Refresh cart after order
             setCartItems([]);
             alert('Order placed successfully!');
+            navigate('/orders');
         } catch (error) {
-            setError('Failed to place order');
+            console.error('Checkout error:', error);
+            setError(error.response?.data?.error || 'Failed to place order');
         }
     };
 

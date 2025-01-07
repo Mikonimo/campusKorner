@@ -129,3 +129,16 @@ class CartItem(db.Model):
 
     def __repr__(self):
         return f'<CartItem user_id={self.user_id} product_id={self.product_id}>'
+
+
+class OrderItem(db.Model):
+    __tablename__ = 'order_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.Float, nullable=False)  # Price at time of purchase
+    
+    # Relationships
+    product = db.relationship('Product')

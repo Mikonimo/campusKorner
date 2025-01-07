@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Handles Order routes"""
 from flask import Blueprint, request, jsonify
-from models import Order, Product, db
+from models import Order, Product, OrderItem, db
 from routes.auth_routes import token_required
 
 order_bp = Blueprint('order_bp', __name__)
@@ -12,23 +12,47 @@ order_bp = Blueprint('order_bp', __name__)
 def create_order(current_user):
     try:
         data = request.get_json()
-        product = Product.query.get_or_404(data['product_id'])
+        items = data.get('items', [])
 
-        if product.status != 'available':
-            return jsonify({'error': 'Product is not available'}), 400
+        if not items:
+            return jsonify({'error': 'No items in order'}), 400
 
-        order = Order(
-            buyer_id=current_user.id,
-            seller_id=product.seller_id,
-            product_id=product.id
-        )
-        product.status = 'pending'
+        # Create new order first
+        order = Order(buyer_id=current_user.id, status='pending')
         db.session.add(order)
+        db.session.flush()  # This gets the order.id before commit
+
+        total_amount = 0
+        for item in items:
+            product = Product.query.get_or_404(item['id'])
+            if product.status != 'available':
+                db.session.rollback()
+                return jsonify({'error': f'Product {product.name} is not available'}), 400
+
+            # Create order item
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=product.id,
+                quantity=item['quantity'],
+                price=product.price
+            )
+            db.session.add(order_item)
+            total_amount += product.price * item['quantity']
+            
+            # Update product status
+            product.status = 'pending'
+
         db.session.commit()
-        return jsonify({'message': 'Order created', 'order_id': order.id}), 201
+        return jsonify({
+            'message': 'Order created successfully',
+            'order_id': order.id,
+            'total_amount': total_amount
+        }), 201
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        print(f"Order creation error: {str(e)}")  # Add logging
+        return jsonify({'error': 'Failed to create order'}), 500
 
 @order_bp.route('/orders/<int:id>', methods=['GET'])
 def get_order(id):
@@ -84,11 +108,17 @@ def get_user_orders(current_user):
             'id': o.id,
             'status': o.status,
             'created_at': o.created_at.isoformat(),
-            'product': {
-                'id': o.product.id,
-                'name': o.product.name,
-                'price': o.product.price
-            }
+            'items': [{
+                'id': item.product.id,
+                'name': item.product.name,
+                'price': item.price,
+                'quantity': item.quantity
+            } for item in o.items],
+            'total': sum(item.price * item.quantity for item in o.items),
+            'buyer': {
+                'id': o.buyer.id,
+                'name': o.buyer.full_name
+            } if role == 'seller' else None
         } for o in pagination.items],
         'total_pages': pagination.pages,
         'current_page': page,
