@@ -60,10 +60,14 @@ def get_order(id):
     return jsonify({
         'id': order.id,
         'buyer_id': order.buyer_id,
-        'seller_id': order.seller_id,
-        'product_id': order.product_id,
+        'seller_id': order.seller_id,  # Now uses the property
         'status': order.status,
-        'created_at': order.created_at
+        'created_at': order.created_at,
+        'items': [{
+            'id': item.product_id,
+            'quantity': item.quantity,
+            'price': item.price
+        } for item in order.items]
     }), 200
 
 @order_bp.route('/orders/<int:id>/status', methods=['PUT'])
@@ -71,6 +75,7 @@ def get_order(id):
 def update_order_status(current_user, id):
     order = Order.query.get_or_404(id)
 
+    # Check if current user is the seller of any items in the order
     if order.seller_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
 
@@ -79,10 +84,13 @@ def update_order_status(current_user, id):
         return jsonify({'error': 'Invalid status'}), 400
 
     order.status = data['status']
-    if order.status == 'completed':
-        order.product.status = 'sold'
-    elif order.status == 'cancelled':
-        order.product.status = 'available'
+
+    # Update all products in the order
+    for item in order.items:
+        if order.status == 'completed':
+            item.product.status = 'sold'
+        elif order.status == 'cancelled':
+            item.product.status = 'available'
 
     db.session.commit()
     return jsonify({'message': 'Order status updated'}), 200
@@ -95,11 +103,11 @@ def get_user_orders(current_user):
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
 
-        query = Order.query
         if role == 'buyer':
-            query = query.filter_by(buyer_id=current_user.id)
+            query = Order.query.filter_by(buyer_id=current_user.id)
         else:
-            query = query.filter_by(seller_id=current_user.id)
+            # For sellers, we need to join with order items and products
+            query = Order.query.join(OrderItem).join(Product).filter(Product.seller_id == current_user.id)
 
         pagination = query.order_by(Order.created_at.desc()).paginate(
             page=page, per_page=per_page)
@@ -110,8 +118,8 @@ def get_user_orders(current_user):
                 'status': o.status,
                 'created_at': o.created_at.isoformat(),
                 'items': [{
-                    'id': item.product.id,
-                    'name': item.product.name,
+                    'id': item.product_ref.id,
+                    'name': item.product_ref.name,
                     'price': float(item.price),
                     'quantity': item.quantity
                 } for item in o.items] if o.items else [],

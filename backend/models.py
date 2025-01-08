@@ -23,7 +23,11 @@ class User(db.Model):
     # Relationships
     products = db.relationship('Product', backref='seller', lazy=True)
     orders_as_buyer = db.relationship('Order', backref='buyer', lazy=True, foreign_keys='Order.buyer_id')
-    orders_as_seller = db.relationship('Order', backref='seller', lazy=True, foreign_keys='Order.seller_id')
+    cart_items = db.relationship(
+        'CartItem',
+        backref=db.backref('user_ref', lazy=True),
+        lazy=True
+    )
 
     def __repr__(self):
         """Representation fo the Class"""
@@ -48,7 +52,21 @@ class Product(db.Model):
 
     # Relationships
     images = db.relationship('ProductImage', backref='product', lazy=True, cascade='all, delete-orphan')
-    orders = db.relationship('Order', backref='product', lazy=True)
+    order_items = db.relationship(
+        'OrderItem',
+        backref=db.backref('product_ref', lazy=True),
+        lazy=True
+    )
+    cart_items = db.relationship(
+        'CartItem',
+        backref=db.backref('product_ref', lazy=True),
+        lazy=True
+    )
+
+    @property
+    def orders(self):
+        """Get all orders containing this product"""
+        return [item.order for item in self.order_items]
 
     def __repr__(self):
         return f'<Product {self.name}>'
@@ -74,30 +92,50 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     buyer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    status = db.Column(db.String(20), default='pending') # pending, completed, cancelled
+    status = db.Column(db.String(20), default='pending')  # pending, completed, cancelled
     created_at = db.Column(DateTime, default=datetime.utcnow)
     updated_at = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    items = db.relationship(
+        'OrderItem',
+        backref=db.backref('order_ref', lazy=True),
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+
+    @property
+    def seller_id(self):
+        """Get seller ID from the first item in the order"""
+        if self.items and self.items[0].product_ref:
+            return self.items[0].product_ref.seller_id
+        return None
+
+    @property
+    def seller(self):
+        if self.items and self.items[0].product_ref:
+            return self.items[0].product_ref.seller
+        return None
 
     def __repr__(self):
         return f'<Order {self.id}>'
 
 
-class Review(db.Model):
-    """Review database model"""
-    __tablename__ = 'reviews'
-
-    id = db.Column(db.Integer, primary_key=True)
-    reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    reviewed_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
-    rating = db.Column(db.Integer, nullable=False) # 1-5 stars
-    comment = db.Column(db.Text)
-    created_at = db.Column(DateTime, default=datetime.utcnow)
-
-    def __repr__(self):
-        return f'<Review {self.id}>'
+# class Review(db.Model):
+#   """Review database model"""
+#    __tablename__ = 'reviews'
+#
+#   id = db.Column(db.Integer, primary_key=True)
+#
+#   reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+#    reviewed_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+#    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+#    rating = db.Column(db.Integer, nullable=False) # 1-5 stars
+#    comment = db.Column(db.Text)
+#    created_at = db.Column(DateTime, default=datetime.utcnow)
+#
+#    def __repr__(self):
+#       return f'<Review {self.id}>'
 
 
 class Category(db.Model):
@@ -123,9 +161,12 @@ class CartItem(db.Model):
     created_at = db.Column(DateTime, default=datetime.utcnow)
     updated_at = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
-    user = db.relationship('User', backref=db.backref('cart_items', lazy=True))
-    product = db.relationship('Product', backref=db.backref('cart_items', lazy=True))
+    # Keep only the product relationship
+    product = db.relationship(
+        'Product',
+        backref=db.backref('cart_references', lazy=True),
+        lazy=True
+    )
 
     def __repr__(self):
         return f'<CartItem user_id={self.user_id} product_id={self.product_id}>'
@@ -133,12 +174,12 @@ class CartItem(db.Model):
 
 class OrderItem(db.Model):
     __tablename__ = 'order_items'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)  # Price at time of purchase
-    
-    # Relationships
-    product = db.relationship('Product')
+
+    # Remove the direct relationship since it's handled by the backref
+    # from Product.order_items

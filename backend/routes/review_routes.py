@@ -2,7 +2,7 @@
 """Review Routes"""
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func  # Add this import
-from models import Review, db, Order
+# from models import Review, db, Order
 from routes.auth_routes import token_required
 
 review_bp = Blueprint('review_bp', __name__)

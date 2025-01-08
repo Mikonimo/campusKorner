@@ -8,7 +8,7 @@ def init_routes(app):
     from .order_routes import order_bp
     from .product_routes import product_bp
     from .category_routes import category_bp
-    from .review_routes import review_bp
+    # from .review_routes import review_bp
     from .profile_routes import profile_bp
     from .cart_routes import cart_bp
 
@@ -18,7 +18,7 @@ def init_routes(app):
         product_bp,
         order_bp,
         category_bp,
-        review_bp,
+        # review_bp,
         profile_bp,
         cart_bp
     ]

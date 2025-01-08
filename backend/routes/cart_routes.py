@@ -13,26 +13,21 @@ cart_bp = Blueprint('cart_bp', __name__)
 @cart_bp.route('/cart', methods=['GET'])
 @token_required
 def get_cart(current_user):
-    """Get user's cart items"""
-    cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
-
-    items = [{
-        'id': item.product_id,
-        'name': item.product.name,
-        'price': item.product.price,
-        'quantity': item.quantity,
-        'total': item.product.price * item.quantity,
-        'seller': item.product.seller.full_name,
-        'university': item.product.university
-    } for item in cart_items]
-
-    total = sum(item['total'] for item in items)
-
-    return jsonify({
-        'items': items,
-        'total': total,
-        'item_count': len(items)
-    }), 200
+    try:
+        cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
+        return jsonify({
+            'items': [{
+                'id': item.id,
+                'product_id': item.product_id,
+                'name': item.product.name,  # This should now work
+                'price': item.product.price,
+                'quantity': item.quantity,
+                'total': item.product.price * item.quantity
+            } for item in cart_items]
+        }), 200
+    except Exception as e:
+        print(f"Error in get_cart: {str(e)}")
+        return jsonify({'error': 'Failed to fetch cart items'}), 500
 
 @cart_bp.route('/cart', methods=['POST'])
 @token_required
