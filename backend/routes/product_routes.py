@@ -191,9 +191,35 @@ def modify_product(current_user, id):
         return jsonify({'error': 'Unauthorized'}), 403
 
     if request.method == 'DELETE':
-        db.session.delete(product)
-        db.session.commit()
-        return jsonify({'message': 'Product deleted'}), 200
+        # Check if product is part of any orders
+        if any(order_item.order_ref.status in ['pending', 'completed']
+               for order_item in product.order_items):
+            return jsonify({
+                'error': 'Cannot delete product that is part of active or completed orders'
+            }), 400
+
+        try:
+            # Delete related order items for cancelled orders
+            for order_item in product.order_items:
+                if order_item.order_ref.status == 'cancelled':
+                    db.session.delete(order_item)
+
+            # Delete product images
+            for image in product.images:
+                file_path = os.path.join(UPLOAD_FOLDER, os.path.basename(image.image_url))
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                db.session.delete(image)
+
+            # Delete the product
+            db.session.delete(product)
+            db.session.commit()
+            return jsonify({'message': 'Product deleted'}), 200
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error deleting product: {str(e)}")
+            return jsonify({'error': 'Failed to delete product'}), 500
 
     # Handle multipart form data for updates
     print("Request content type:", request.content_type)

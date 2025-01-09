@@ -52,11 +52,7 @@ class Product(db.Model):
 
     # Relationships
     images = db.relationship('ProductImage', backref='product', lazy=True, cascade='all, delete-orphan')
-    order_items = db.relationship(
-        'OrderItem',
-        backref=db.backref('product_ref', lazy=True),
-        lazy=True
-    )
+    order_items = db.relationship('OrderItem', backref='product_ref', lazy=True)
     cart_items = db.relationship(
         'CartItem',
         back_populates='product',
@@ -179,7 +175,7 @@ class OrderItem(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='SET NULL'), nullable=True)
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)  # Price at time of purchase
 
