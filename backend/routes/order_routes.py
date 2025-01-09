@@ -76,7 +76,7 @@ def update_order_status(current_user, id):
     order = Order.query.get_or_404(id)
 
     # Check if current user is the seller of any items in the order
-    if order.seller_id != current_user.id:
+    if order.seller_id != current_user.id and order.buyer_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
 
     data = request.get_json()
@@ -87,10 +87,12 @@ def update_order_status(current_user, id):
 
     # Update all products in the order
     for item in order.items:
-        if order.status == 'completed':
-            item.product.status = 'sold'
-        elif order.status == 'cancelled':
-            item.product.status = 'available'
+        product = Product.query.get(item.product_id)
+    if product:
+            if order.status == 'completed':
+                product.status = 'sold'
+            elif order.status == 'cancelled':
+                product.status = 'available'
 
     db.session.commit()
     return jsonify({'message': 'Order status updated'}), 200
