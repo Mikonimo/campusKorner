@@ -59,7 +59,8 @@ class Product(db.Model):
     )
     cart_items = db.relationship(
         'CartItem',
-        backref=db.backref('product_ref', lazy=True),
+        back_populates='product',
+        overlaps="product_ref,cart_references",
         lazy=True
     )
 
@@ -164,7 +165,8 @@ class CartItem(db.Model):
     # Keep only the product relationship
     product = db.relationship(
         'Product',
-        backref=db.backref('cart_references', lazy=True),
+        back_populates='cart_items',
+        overlaps="product_ref,cart_references",
         lazy=True
     )
 

@@ -45,10 +45,38 @@ const api = {
     updateOrderStatus: (orderId, status) =>
         axiosInstance.put(`/orders/${orderId}/status`, { status }),
 
-    // Cart
+    // Cart operations
     addToCart: (productId, quantity) =>
-        axiosInstance.post('/cart', { productId, quantity }),
-    getCart: () => axiosInstance.get('/cart'),
+        axiosInstance.post('/cart', {
+            productId,
+            quantity: parseInt(quantity)
+        }).catch(error => {
+            console.error('Add to cart error:', error);
+            throw error;
+        }),
+    getCart: () =>
+        axiosInstance.get('/cart').catch(error => {
+            console.error('Get cart error:', error);
+            throw error;
+        }),
+    updateCartItem: (productId, quantity) =>
+        axiosInstance.post('/cart', {
+            productId,
+            quantity: parseInt(quantity)
+        }).catch(error => {
+            console.error('Update cart error:', error);
+            throw error;
+        }),
+    removeFromCart: (productId) =>
+        axiosInstance.delete(`/cart/${productId}`).catch(error => {
+            console.error('Remove from cart error:', error);
+            throw error;
+        }),
+    clearCart: () =>
+        axiosInstance.delete('/cart').catch(error => {
+            console.error('Clear cart error:', error);
+            throw error;
+        }),
 
     // Profile
     getProfile: () => axiosInstance.get('/profile'),

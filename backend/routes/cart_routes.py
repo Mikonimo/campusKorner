@@ -19,7 +19,7 @@ def get_cart(current_user):
             'items': [{
                 'id': item.id,
                 'product_id': item.product_id,
-                'name': item.product.name,  # This should now work
+                'name': item.product.name,
                 'price': item.product.price,
                 'quantity': item.quantity,
                 'total': item.product.price * item.quantity

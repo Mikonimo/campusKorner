@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';  // Add this import
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const Cart = () => {
-    const navigate = useNavigate();  // Add this hook
+    const navigate = useNavigate();
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -28,21 +28,39 @@ const Cart = () => {
         if (newQuantity < 1) return;
         setUpdateLoading(true);
         try {
-            await api.addToCart(productId, newQuantity);
-            fetchCart();
+            await api.updateCartItem(productId, newQuantity);
+            await fetchCart();
         } catch (error) {
             setError('Failed to update quantity');
+            console.error('Update quantity error:', error);
         } finally {
             setUpdateLoading(false);
         }
     };
 
     const removeItem = async (productId) => {
+        setUpdateLoading(true);
         try {
-            await api.addToCart(productId, 0);
-            fetchCart();
+            await api.removeFromCart(productId);
+            await fetchCart();
         } catch (error) {
             setError('Failed to remove item');
+            console.error('Remove item error:', error);
+        } finally {
+            setUpdateLoading(false);
+        }
+    };
+
+    const clearCart = async () => {
+        setUpdateLoading(true);
+        try {
+            await api.clearCart();
+            setCartItems([]);
+        } catch (error) {
+            setError('Failed to clear cart');
+            console.error('Clear cart error:', error);
+        } finally {
+            setUpdateLoading(false);
         }
     };
 
@@ -58,12 +76,12 @@ const Cart = () => {
             }
 
             const orderItems = cartItems.map(item => ({
-                id: item.product_id || item.id, // Handle both possible property names
+                id: item.product_id || item.id,
                 quantity: item.quantity
             }));
 
             await api.createOrder(orderItems);
-            await api.getCart(); // Refresh cart after order
+            await api.getCart();
             setCartItems([]);
             alert('Order placed successfully!');
             navigate('/orders');
@@ -96,7 +114,7 @@ const Cart = () => {
                                 </div>
                                 <div className="item-actions">
                                     <button
-                                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                        onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
                                         disabled={updateLoading || item.quantity <= 1}
                                         className="quantity-btn"
                                     >
@@ -104,14 +122,14 @@ const Cart = () => {
                                     </button>
                                     <span className="quantity">{item.quantity}</span>
                                     <button
-                                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                        onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
                                         disabled={updateLoading}
                                         className="quantity-btn"
                                     >
                                         +
                                     </button>
                                     <button
-                                        onClick={() => removeItem(item.id)}
+                                        onClick={() => removeItem(item.product_id)}
                                         disabled={updateLoading}
                                         className="remove-btn"
                                     >
@@ -125,16 +143,26 @@ const Cart = () => {
                         <div className="cart-total">
                             <h3>Total: ${calculateTotal().toFixed(2)}</h3>
                         </div>
-                        <button
-                            onClick={handleCheckout}
-                            disabled={updateLoading}
-                            className="checkout-btn"
-                        >
-                            Proceed to Checkout
-                        </button>
+                        <div className="cart-actions">
+                            <button
+                                onClick={clearCart}
+                                disabled={updateLoading}
+                                className="clear-cart-btn"
+                            >
+                                Clear Cart
+                            </button>
+                            <button
+                                onClick={handleCheckout}
+                                disabled={updateLoading}
+                                className="checkout-btn"
+                            >
+                                Proceed to Checkout
+                            </button>
+                        </div>
                     </div>
                 </>
             )}
+            {error && <div className="error-message">{error}</div>}
         </div>
     );
 };

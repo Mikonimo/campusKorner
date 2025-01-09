@@ -44,8 +44,8 @@ const Orders = () => {
         }
     };
 
-    if (loading) return <div>Loading orders...</div>;
-    if (error) return <div className="error">{error}</div>;
+    if (loading) return <div className="loading">Loading orders...</div>;
+    if (error) return <div className="error-message">{error}</div>;
 
     return (
         <div className="orders-container">
@@ -61,7 +61,7 @@ const Orders = () => {
                         onClick={() => setRole('seller')}
                         className={role === 'seller' ? 'active' : ''}
                     >
-                        Received Orders
+                        Sales
                     </button>
                 </div>
             )}
@@ -71,7 +71,7 @@ const Orders = () => {
                     <div key={order.id} className="order-card">
                         <div className="order-header">
                             <h3>Order #{order.id}</h3>
-                            <span className="status">{order.status}</span>
+                            <span className={`status ${order.status}`}>{order.status}</span>
                         </div>
 
                         {role === 'seller' && (
@@ -94,16 +94,24 @@ const Orders = () => {
                             Total: ${order.total.toFixed(2)}
                         </div>
 
-                        {role === 'seller' && order.status === 'pending' && (
-                            <div className="order-actions">
-                                <button onClick={() => handleStatusUpdate(order.id, 'completed')}>
+                        <div className="order-actions">
+                            {role === 'seller' && order.status === 'pending' && (
+                                <button
+                                    className="complete-btn"
+                                    onClick={() => handleStatusUpdate(order.id, 'completed')}
+                                >
                                     Complete Order
                                 </button>
-                                <button onClick={() => handleStatusUpdate(order.id, 'cancelled')}>
+                            )}
+                            {role === 'buyer' && order.status === 'pending' && (
+                                <button
+                                    className="cancel-btn"
+                                    onClick={() => handleStatusUpdate(order.id, 'cancelled')}
+                                >
                                     Cancel Order
                                 </button>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 ))
             ) : (

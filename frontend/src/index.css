@@ -335,3 +335,25 @@ code {
     padding: 2rem;
     color: #7f8c8d;
 }
+
+.clear-cart-btn {
+    width: 100%;
+    max-width: 200px;
+    padding: 0.8rem 1rem;
+    background-color: #e74c3c;
+    color: #f3f1f1;
+    border: 2px solid #e74c3c;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.clear-cart-btn:hover {
+    background-color: #e74c3c;
+}
