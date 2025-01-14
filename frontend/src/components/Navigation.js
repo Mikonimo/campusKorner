@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './Navigation.css';
 
 const Navigation = () => {
@@ -16,25 +16,45 @@ const Navigation = () => {
 
     return (
         <nav className="navigation">
-            <div className="nav-brand" onClick={() => navigate('/')}>
+            <Link to="/" className="nav-brand">
                 CampusKorner
-            </div>
+            </Link>
             <div className="nav-buttons">
                 {isAuthenticated ? (
                     <>
-                        <button onClick={() => navigate('/')}>Products</button>
+                        <Link to="/" className="nav-link home">
+                            Products
+                        </Link>
                         {isSeller && (
-                            <button onClick={() => navigate('/products')}>Sell</button>
+                            <Link to="/products" className="nav-link sell">
+                                Sell
+                            </Link>
                         )}
-                        <button onClick={() => navigate('/cart')}>Cart</button>
-                        <button onClick={() => navigate('/orders')}>Orders</button>
-                        <button onClick={() => navigate('/profile')}>Profile</button>
-                        <button onClick={handleLogout} className="logout">Logout</button>
+                        <Link to="/cart" className="nav-link cart">
+                            Cart
+                            <div className="cart-badge">
+                                {/* Add cart count if you have it */}
+                                {/* <span className="cart-count">0</span> */}
+                            </div>
+                        </Link>
+                        <Link to="/orders" className="nav-link orders">
+                            Orders
+                        </Link>
+                        <Link to="/profile" className="nav-link profile">
+                            Profile
+                        </Link>
+                        <button onClick={handleLogout} className="nav-button logout">
+                            Logout
+                        </button>
                     </>
                 ) : (
                     <>
-                        <button onClick={() => navigate('/login')}>Login</button>
-                        <button onClick={() => navigate('/register')}>Register</button>
+                        <Link to="/login" className="nav-link login">
+                            Login
+                        </Link>
+                        <Link to="/register" className="nav-link register">
+                            Register
+                        </Link>
                     </>
                 )}
             </div>

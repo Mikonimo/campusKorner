@@ -28,6 +28,12 @@ def create_app():
         db.create_all()
         click.echo("Database schema created!")
 
+    @app.cli.command("drop-db")
+    def drop_db():
+        """Drop the database schema"""
+        db.drop_all()
+        click.echo("Database schema dropped!")
+
     with app.app_context():
         from routes import init_routes
         init_routes(app)
