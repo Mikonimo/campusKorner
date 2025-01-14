@@ -57,14 +57,19 @@ CampusKorner connects students within their campus by providing an easy-to-use i
 ## Project Structure
 ```
 campusKorner/
-├── backend/          # Flask application
-│   ├── api/         # API endpoints
-│   ├── models/      # Database models
-│   └── services/    # Business logic
-└── frontend/        # React application
-    ├── src/
-    ├── components/  # Reusable UI components
-    └── services/    # API functionality code
+├── backend/                # Flask application
+│   ├── routes/             # API endpoints
+│   ├── models/             # Database models
+│   ├── ../                 # Business logic
+│   ├── migrations/         # Database migrations
+│   └── tests/              # Test files
+└── frontend/               # React application
+    ├── public/             # Public files
+    ├── src/                # Source code
+    │   ├── components/     # Reusable UI components
+    │   ├── services/       # API interaction
+    │   └── utils/          # Helper functions
+    └── tests/              # Frontend tests
 ```
 
 ## Prerequisites
