@@ -1,6 +1,9 @@
 # CampusKorner
 
-A marketplace platform for university students to buy and sell items within their campus community.
+A modern marketplace for university students to buy and sell items within their campus community. This platform simplifies product listings, ordering, reviews, and more, all tailored to university life.
+
+## Introduction
+CampusKorner connects students within their campus by providing an easy-to-use interface for product management, orders, reviews, and profiles. The goal is to foster a trusted and convenient environment to exchange goods or services exclusively for university students.
 
 ## Features
 
@@ -61,26 +64,32 @@ campusKorner/
 └── frontend/        # React application
     ├── src/
     ├── components/  # Reusable UI components
-    └── features/    # Feature-specific code
+    └── services/    # API functionality code
 ```
+
+## Prerequisites
+- Python 3.9+
+- Node.js 14+
+- MySQL 8.0
+- (Optional) Virtual environment tools for Python
 
 ## Setup
 
 ### Backend Setup
-
-1. Clone the repository
-2. Create virtual environment:
+1. Ensure MySQL 8.0 is running locally and the credentials in `.env` match your setup.
+2. Clone the repository
+3. Create virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate
 ```
 
-3. Install dependencies:
+4. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Set up environment variables in `.env`:
+5. Make sure your `.env` file is properly configured with DATABASE_URL and other variables.
 ```
 DATABASE_URL=mysql+pymysql://user:password@localhost/dbname
 SECRET_KEY=your-secret-key
@@ -88,33 +97,34 @@ JWT_EXPIRATION_HOURS=24
 CORS_ORIGINS=http://localhost:3000
 ```
 
-5. Initialize database:
+6. Initialize database:
 ```bash
 flask create-db
 ```
 
-6. Run the application:
+7. Run the application:
 ```bash
 flask run
 ```
 
 ### Frontend Setup
-1. Navigate to frontend directory:
+1. Verify Node.js 14+ is installed.
+2. Navigate to frontend directory:
 ```bash
 cd frontend
 ```
 
-2. Install dependencies:
+3. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Set up environment variables in `.env`:
+4. Create a `.env` file with the correct API URL and other environment variables.
 ```
 REACT_APP_API_URL=http://localhost:5000/api
 ```
 
-4. Start development server:
+5. Start development server:
 ```bash
 npm start
 ```
@@ -223,4 +233,3 @@ REACT_APP_GOOGLE_MAPS_KEY=your-google-maps-key
 
 ## License
 
-[Add your license here]
