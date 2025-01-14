@@ -71,7 +71,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.5rem;  /* reduced from 0.8rem */
 }
 
 .product-info h3 {
@@ -90,13 +90,13 @@
     color: var(--secondary-color);
     font-size: 1.15em;
     font-weight: 600;
-    margin: 5px 0;
+    margin: 3px 0;  /* reduced from 5px */
 }
 
 .university, .seller {
     color: #666;
     font-size: 0.9em;
-    margin: 5px 0;
+    margin: 3px 0;  /* reduced from 5px */
 }
 
 .pagination {
