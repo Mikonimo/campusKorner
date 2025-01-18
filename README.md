@@ -134,32 +134,6 @@ REACT_APP_API_URL=http://localhost:5000/api
 npm start
 ```
 
-## Development Workflow
-
-1. Backend Development:
-```bash
-# Start Flask development server
-flask run --debug
-
-# Run tests
-pytest
-
-# Run linting
-flake8
-```
-
-2. Frontend Development:
-```bash
-# Start React development server
-npm start
-
-# Run tests
-npm test
-
-# Build for production
-npm run build
-```
-
 ## API Endpoints
 
 ### Authentication
@@ -180,6 +154,14 @@ npm run build
 - PUT /api/orders/<id>/status - Update order status
 - GET /api/user/orders - Get user's orders
 
+### Profile
+- GET /api/profile - Get user profile
+- PUT /api/profile/update - Update profile
+- POST /api/profile/seller - Become seller
+
+==============================================
+#### Not Yet Implemented
+
 ### Reviews
 - POST /api/reviews - Create review
 - GET /api/reviews/user/<id> - Get user reviews
@@ -189,11 +171,6 @@ npm run build
 - POST /api/categories - Create category (admin only)
 - PUT /api/categories/<id> - Update category
 - DELETE /api/categories/<id> - Delete category
-
-### Profile
-- GET /api/profile - Get user profile
-- PUT /api/profile/update - Update profile
-- POST /api/profile/seller - Become seller
 
 ### Search
 - GET /api/search - Search across products
@@ -209,6 +186,7 @@ npm run build
 - Product: Product listings
 - ProductImage: Product images
 - Order: Order management
+- OrderItem: Specific order management
 - Review: User reviews
 - Category: Product categories
 
@@ -235,6 +213,3 @@ REACT_APP_GOOGLE_MAPS_KEY=your-google-maps-key
 3. Commit changes
 4. Push to branch
 5. Create Pull Request
-
-## License
-
