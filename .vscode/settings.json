@@ -13,6 +13,19 @@
             "database": "campuskorner",
             "username": "mikonimo",
             "askForPassword": true
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "database_admin",
+            "database": "database_admin",
+            "username": "mikonimo"
         }
     ]
 }
