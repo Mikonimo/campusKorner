@@ -161,8 +161,8 @@ Before you begin, ensure you have the following installed:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/campuskorner.git
-   cd campuskorner
+   git clone https://github.com/Mikonimo/campusKorner.git
+   cd campusKorner
    ```
 
 2. **Create and activate virtual environment**
@@ -488,7 +488,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📬 Contact
 
-Project Link: [https://github.com/Mikonimo/campuskorner](https://github.com/Mikonimo/campuskorner)
+Project Link: [https://github.com/Mikonimo/campusKorner](https://github.com/Mikonimo/campusKorner)
 
 Email: markmanani19@gmail.com
 
